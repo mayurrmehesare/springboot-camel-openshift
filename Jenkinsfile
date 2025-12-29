@@ -11,18 +11,23 @@ pipeline {
 
         stage('Build') {
             steps {
-                sh './mvnw clean package -DskipTests'
+                sh '''
+                    chmod +x mvnw
+                    ./mvnw clean package -DskipTests
+                    '''
             }
         }
+
 
         stage('Build Image') {
             steps {
                 sh '''
-                  oc new-build --name=camel-demo --binary=true --strategy=docker || true
-                  oc start-build camel-demo --from-dir=. --follow
-                '''
+                    oc new-build --name=camel-demo --binary=true --strategy=docker || true
+                    oc start-build camel-demo --from-dir=target --follow
+                    '''
             }
         }
+
 
         stage('Deploy') {
             steps {
