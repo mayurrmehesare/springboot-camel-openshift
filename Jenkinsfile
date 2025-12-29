@@ -20,13 +20,13 @@ pipeline {
 
 
         stage('Build Image') {
-            steps {
-                sh '''
-                    oc new-build --name=camel-demo --binary=true --strategy=docker || true
-                    oc start-build camel-demo --from-dir=target --follow
-                    '''
-            }
-        }
+    steps {
+        sh '''
+            oc new-build --name=camel-demo --binary=true --strategy=docker || true
+            oc start-build camel-demo --from-dir=. --follow
+        '''
+    }
+}
 
 
         stage('Deploy') {
