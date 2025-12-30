@@ -10,30 +10,29 @@ pipeline {
         }
 
         stage('Build & Test') {
-    steps {
-        sh '''
-            chmod +x mvnw
-            ./mvnw clean test surefire-report:report
-        '''
-    }
-    post {
-        always {
-            junit testResults: '**/target/surefire-reports/*.xml',
-                  allowEmptyResults: true,
-                  skipPublishingChecks: true
+            steps {
+                sh '''
+                    chmod +x mvnw
+                    ./mvnw clean test site
+                '''
+            }
+            post {
+                always {
+                    junit testResults: '**/target/surefire-reports/*.xml',
+                          allowEmptyResults: true,
+                          skipPublishingChecks: true
 
-            publishHTML(target: [
-                allowMissing: false,
-                alwaysLinkToLastBuild: true,
-                keepAll: true,
-                reportDir: 'target/site',
-                reportFiles: 'surefire-report.html',
-                reportName: 'JUnit Test Report'
-            ])
+                    publishHTML(target: [
+                        allowMissing: false,
+                        alwaysLinkToLastBuild: true,
+                        keepAll: true,
+                        reportDir: 'target/site',
+                        reportFiles: 'surefire-report.html',
+                        reportName: 'JUnit Test Report'
+                    ])
+                }
+            }
         }
-    }
-}
-
 
         stage('Build Image') {
             steps {
