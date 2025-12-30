@@ -9,11 +9,11 @@ pipeline {
             }
         }
 
-        stage('Build & Test') {
+        stage('Build, Test & Reports') {
             steps {
                 sh '''
                     chmod +x mvnw
-                    ./mvnw clean test site
+                    ./mvnw clean test pmd:pmd site
                 '''
             }
             post {
@@ -30,28 +30,18 @@ pipeline {
                         reportFiles: 'surefire-report.html',
                         reportName: 'JUnit Test Report'
                     ])
+
+                    publishHTML(target: [
+                        allowMissing: false,
+                        alwaysLinkToLastBuild: true,
+                        keepAll: true,
+                        reportDir: 'target/site',
+                        reportFiles: 'pmd.html',
+                        reportName: 'PMD Report'
+                    ])
                 }
             }
         }
-        stage('PMD Analysis') {
-     steps {
-        sh '''
-            ./mvnw pmd:pmd
-        '''
-    }
-    post {
-        always {
-            publishHTML(target: [
-                allowMissing: false,
-                alwaysLinkToLastBuild: true,
-                keepAll: true,
-                reportDir: 'target/site',
-                reportFiles: 'pmd.html',
-                reportName: 'PMD Report'
-            ])
-        }
-    }
-}
 
         stage('Build Image') {
             steps {
