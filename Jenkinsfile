@@ -33,6 +33,25 @@ pipeline {
                 }
             }
         }
+        stage('PMD Analysis') {
+     steps {
+        sh '''
+            ./mvnw pmd:pmd
+        '''
+    }
+    post {
+        always {
+            publishHTML(target: [
+                allowMissing: false,
+                alwaysLinkToLastBuild: true,
+                keepAll: true,
+                reportDir: 'target/site',
+                reportFiles: 'pmd.html',
+                reportName: 'PMD Report'
+            ])
+        }
+    }
+}
 
         stage('Build Image') {
             steps {
