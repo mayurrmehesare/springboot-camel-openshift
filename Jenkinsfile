@@ -4,7 +4,6 @@ pipeline {
     options {
         durabilityHint('MAX_SURVIVABILITY')
         disableConcurrentBuilds()
-        timestamps()
     }
 
     stages {
