@@ -1,6 +1,6 @@
 pipeline {
     agent any
-
+//adding commenting to check the setup
         triggers 
         {
         pollSCM('H/2 * * * *') // every 2 minutes
