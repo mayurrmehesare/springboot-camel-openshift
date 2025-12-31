@@ -34,21 +34,38 @@ pipeline {
             }
         }
 
-        stage('Build Image') {
+        stage('Deploy to DEV') {
+            when { branch 'dev' }
             steps {
                 sh '''
                     ./mvnw clean package -DskipTests
-                    oc new-build --name=camel-demo --binary=true --strategy=docker || true
-                    oc start-build camel-demo --from-dir=. --follow
+                    oc new-build camel-demo-dev --binary --strategy=docker || true
+                    oc start-build camel-demo-dev --from-dir=. --follow
+                    oc expose svc/camel-demo-dev || true
                 '''
             }
         }
 
-        stage('Deploy') {
+        stage('Deploy to QA') {
+            when { branch 'qa' }
             steps {
                 sh '''
-                    oc new-app camel-demo || true
-                    oc expose svc/camel-demo || true
+                    ./mvnw clean package -DskipTests
+                    oc new-build camel-demo-qa --binary --strategy=docker || true
+                    oc start-build camel-demo-qa --from-dir=. --follow
+                    oc expose svc/camel-demo-qa || true
+                '''
+            }
+        }
+
+        stage('Deploy to PROD') {
+            when { branch 'main' }
+            steps {
+                sh '''
+                    ./mvnw clean package -DskipTests
+                    oc new-build camel-demo-prod --binary --strategy=docker || true
+                    oc start-build camel-demo-prod --from-dir=. --follow
+                    oc expose svc/camel-demo-prod || true
                 '''
             }
         }
