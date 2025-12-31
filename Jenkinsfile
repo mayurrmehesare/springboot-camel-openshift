@@ -1,6 +1,11 @@
 pipeline {
     agent any
 
+        triggers 
+        {
+        pollSCM('H/2 * * * *') // every 2 minutes
+        }
+
     options {
         durabilityHint('MAX_SURVIVABILITY')
         disableConcurrentBuilds()
