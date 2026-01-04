@@ -1,5 +1,15 @@
 pipeline {
     agent any
+//adding commenting to check the setup
+        triggers 
+        {
+        pollSCM('H/2 * * * *') // every 2 minutes
+        }
+
+    options {
+        durabilityHint('MAX_SURVIVABILITY')
+        disableConcurrentBuilds()
+    }
 
     options {
         durabilityHint('MAX_SURVIVABILITY')
@@ -14,7 +24,7 @@ pipeline {
             }
         }
 
-        stage('Build & Test') {
+        stage('Build, Test & Reports') {
             steps {
                 sh '''
                     chmod +x mvnw
