@@ -16,6 +16,11 @@ pipeline {
         disableConcurrentBuilds()
     }
 
+    options {
+        durabilityHint('MAX_SURVIVABILITY')
+        disableConcurrentBuilds()
+    }
+
     stages {
 
         stage('Checkout') {
