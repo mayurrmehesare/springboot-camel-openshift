@@ -11,6 +11,11 @@ pipeline {
         disableConcurrentBuilds()
     }
 
+    options {
+        durabilityHint('MAX_SURVIVABILITY')
+        disableConcurrentBuilds()
+    }
+
     stages {
 
         stage('Checkout') {
@@ -23,14 +28,24 @@ pipeline {
             steps {
                 sh '''
                     chmod +x mvnw
-                    ./mvnw clean test pmd:pmd site
+                    ./mvnw clean test
                 '''
             }
             post {
                 always {
-                    junit testResults: '**/target/surefire-reports/*.xml',
-                          allowEmptyResults: true
+                    junit '**/target/surefire-reports/*.xml', allowEmptyResults: true
+                }
+            }
+        }
 
+        stage('Code Quality Reports') {
+            steps {
+                sh '''
+                    ./mvnw pmd:pmd site
+                '''
+            }
+            post {
+                always {
                     publishHTML(target: [
                         allowMissing: false,
                         alwaysLinkToLastBuild: true,
@@ -52,33 +67,27 @@ pipeline {
             }
         }
 
-        stage('Deploy to DEV') {
-            when { branch 'dev' }
+        stage('Package') {
+            when {
+                anyOf {
+                    branch 'qa'
+                    branch 'main'
+                }
+            }
             steps {
                 sh '''
-                    ./mvnw clean package -DskipTests
-                    oc new-build camel-demo-dev --binary --strategy=docker || true
-                    oc start-build camel-demo-dev --from-dir=. --follow
+                    ./mvnw package -DskipTests
                 '''
             }
         }
 
-        stage('Deploy to QA') {
-            when { branch 'qa' }
-            steps {
-                sh '''
-                    ./mvnw clean package -DskipTests
-                    oc new-build camel-demo-qa --binary --strategy=docker || true
-                    oc start-build camel-demo-qa --from-dir=. --follow
-                '''
+        stage('Deploy') {
+            when {
+                branch 'main'
             }
-        }
-
-        stage('Deploy to PROD') {
-            when { branch 'main' }
             steps {
                 sh '''
-                    ./mvnw clean package -DskipTests
+                    echo "Deploying from MAIN branch"
                     oc new-build camel-demo-prod --binary --strategy=docker || true
                     oc start-build camel-demo-prod --from-dir=. --follow
                 '''
