@@ -23,7 +23,8 @@ pipeline {
             }
             post {
                 always {
-                    junit '**/target/surefire-reports/*.xml', allowEmptyResults: true
+                    junit testResults: '**/target/surefire-reports/*.xml',
+                          allowEmptyResults: true
                 }
             }
         }
@@ -76,11 +77,7 @@ pipeline {
                 branch 'main'
             }
             steps {
-                sh '''
-                    echo "Deploying from MAIN branch"
-                    oc new-build camel-demo-prod --binary --strategy=docker || true
-                    oc start-build camel-demo-prod --from-dir=. --follow
-                '''
+                echo "Deploy step placeholder (skipped for now)"
             }
         }
     }
