@@ -6,6 +6,11 @@ pipeline {
         disableConcurrentBuilds()
     }
 
+    environment {
+        BASE_DIR = "/opt/springboot"
+        APP_NAME = "springboot-camel.jar"
+    }
+
     stages {
 
         stage('Checkout') {
@@ -23,7 +28,8 @@ pipeline {
             }
             post {
                 always {
-                    junit '**/target/surefire-reports/*.xml', allowEmptyResults: true
+                    junit '**/target/surefire-reports/*.xml',
+                          allowEmptyResults: true
                 }
             }
         }
@@ -60,8 +66,8 @@ pipeline {
         stage('Package') {
             when {
                 anyOf {
+                    branch 'develop'
                     branch 'qa'
-                    branch 'main'
                 }
             }
             steps {
@@ -71,15 +77,42 @@ pipeline {
             }
         }
 
-        stage('Deploy') {
+        stage('Deploy DEV') {
             when {
-                branch 'main'
+                branch 'develop'
             }
             steps {
                 sh '''
-                    echo "Deploying from MAIN branch"
-                    oc new-build camel-demo-prod --binary --strategy=docker || true
-                    oc start-build camel-demo-prod --from-dir=. --follow
+                    echo "Deploying DEV on same EC2"
+
+                    pkill -f "spring.profiles.active=dev" || true
+
+                    cp target/*.jar ${BASE_DIR}/dev/${APP_NAME}
+
+                    nohup java -jar ${BASE_DIR}/dev/${APP_NAME} \
+                        --spring.profiles.active=dev \
+                        --server.port=8081 \
+                        > ${BASE_DIR}/logs/dev.log 2>&1 &
+                '''
+            }
+        }
+
+        stage('Deploy QA') {
+            when {
+                branch 'qa'
+            }
+            steps {
+                sh '''
+                    echo "Deploying QA on same EC2"
+
+                    pkill -f "spring.profiles.active=qa" || true
+
+                    cp target/*.jar ${BASE_DIR}/qa/${APP_NAME}
+
+                    nohup java -jar ${BASE_DIR}/qa/${APP_NAME} \
+                        --spring.profiles.active=qa \
+                        --server.port=8082 \
+                        > ${BASE_DIR}/logs/qa.log 2>&1 &
                 '''
             }
         }
