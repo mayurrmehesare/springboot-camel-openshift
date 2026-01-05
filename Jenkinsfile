@@ -78,24 +78,26 @@ pipeline {
         }
 
         stage('Deploy DEV') {
-            when {
-                branch 'dev'
-            }
-            steps {
-                sh '''
-                    echo "Deploying DEV on same EC2"
+    when {
+        branch 'dev'
+    }
+    steps {
+        sh '''
+            echo "Deploying DEV on same EC2"
 
-                    pkill -f "spring.profiles.active=dev" || true
+            pkill -f "spring.profiles.active=dev" || true
 
-                    cp target/*.jar ${BASE_DIR}/dev/${APP_NAME}
+            mkdir -p /opt/springboot/logs
 
-                    nohup java -jar ${BASE_DIR}/dev/${APP_NAME} \
-                        --spring.profiles.active=dev \
-                        --server.port=8081 \
-                        > ${BASE_DIR}/logs/dev.log 2>&1 &
-                '''
-            }
-        }
+            cp target/camel-demo-1.0.0.jar /opt/springboot/dev/springboot-camel.jar
+
+            nohup java -jar /opt/springboot/dev/springboot-camel.jar \
+              --spring.profiles.active=dev \
+              --server.port=8081 \
+              > /opt/springboot/logs/dev.log 2>&1 &
+        '''
+    }
+}
 
         stage('Deploy QA') {
             when {
