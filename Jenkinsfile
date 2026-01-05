@@ -91,13 +91,16 @@ pipeline {
 
             cp target/camel-demo-1.0.0.jar /opt/springboot/dev/springboot-camel.jar
 
-            nohup java -jar /opt/springboot/dev/springboot-camel.jar \
-              --spring.profiles.active=dev \
-              --server.port=8081 \
-              > /opt/springboot/logs/dev.log 2>&1 &
+            nohup sh -c '
+              java -jar /opt/springboot/dev/springboot-camel.jar \
+                --spring.profiles.active=dev \
+                --server.port=8081 \
+                > /opt/springboot/logs/dev.log 2>&1
+            ' &
         '''
     }
 }
+
 
         stage('Deploy QA') {
             when {
