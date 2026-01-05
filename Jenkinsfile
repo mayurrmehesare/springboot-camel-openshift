@@ -66,7 +66,7 @@ pipeline {
         stage('Package') {
             when {
                 anyOf {
-                    branch 'develop'
+                    branch 'dev'
                     branch 'qa'
                 }
             }
@@ -79,7 +79,7 @@ pipeline {
 
         stage('Deploy DEV') {
             when {
-                branch 'develop'
+                branch 'dev'
             }
             steps {
                 sh '''
