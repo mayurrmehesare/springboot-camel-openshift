@@ -9,6 +9,7 @@ public class HelloRoute extends RouteBuilder {
     @Override
     public void configure() {
         from("timer:hello?period=5000")
-            .log("Hello from Apache Camel running on OpenShift!");
+        //comment
+            .log("Hello from Apache Camel running using RPM!");
     }
 }
