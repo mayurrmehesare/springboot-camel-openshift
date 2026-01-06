@@ -6,6 +6,11 @@ pipeline {
         disableConcurrentBuilds()
     }
 
+    environment {
+        BASE_DIR = "/opt/springboot"
+        APP_NAME = "springboot-camel.jar"
+    }
+
     stages {
 
         stage('Checkout') {
@@ -23,7 +28,7 @@ pipeline {
             }
             post {
                 always {
-                    junit testResults: '**/target/surefire-reports/*.xml',
+                    junit '**/target/surefire-reports/*.xml',
                           allowEmptyResults: true
                 }
             }
