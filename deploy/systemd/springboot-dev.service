@@ -1,0 +1,21 @@
+[Unit]
+Description=Spring Boot Camel DEV
+After=network.target
+
+[Service]
+Type=simple
+User=ec2-user
+WorkingDirectory=/opt/springboot/dev
+
+ExecStart=/usr/bin/java -jar /opt/springboot/dev/app.jar \
+  --spring.profiles.active=dev \
+  --server.port=8081
+
+Restart=always
+RestartSec=5
+SuccessExitStatus=143
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
