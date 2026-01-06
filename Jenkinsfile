@@ -6,11 +6,6 @@ pipeline {
         disableConcurrentBuilds()
     }
 
-    environment {
-        BASE_DIR = "/opt/springboot"
-        APP_NAME = "springboot-camel.jar"
-    }
-
     stages {
 
         stage('Checkout') {
@@ -29,7 +24,7 @@ pipeline {
             post {
                 always {
                     junit testResults: '**/target/surefire-reports/*.xml',
-                    allowEmptyResults: true
+                          allowEmptyResults: true
                 }
             }
         }
@@ -77,30 +72,40 @@ pipeline {
             }
         }
 
+        stage('Build RPM') {
+            when {
+                anyOf {
+                    branch 'dev'
+                    branch 'qa'
+                }
+            }
+            steps {
+                sh '''
+                    mkdir -p rpm/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
+
+                    cp target/*.jar rpm/SOURCES/app.jar
+                    cp deploy/systemd/*.service rpm/SOURCES/
+                    cp deploy/rpm/springboot-camel.spec rpm/SPECS/
+
+                    rpmbuild \
+                      --define "_topdir $(pwd)/rpm" \
+                      -bb rpm/SPECS/springboot-camel.spec
+                '''
+            }
+        }
+
         stage('Deploy DEV') {
-    when {
-        branch 'dev'
-    }
-    steps {
-        sh '''
-            echo "Deploying DEV on same EC2"
-
-            pkill -f "spring.profiles.active=dev" || true
-
-            mkdir -p /opt/springboot/logs
-
-            cp target/camel-demo-1.0.0.jar /opt/springboot/dev/springboot-camel.jar
-
-            nohup sh -c '
-              java -jar /opt/springboot/dev/springboot-camel.jar \
-                --spring.profiles.active=dev \
-                --server.port=8081 \
-                > /opt/springboot/logs/dev.log 2>&1
-            ' &
-        '''
-    }
-}
-
+            when {
+                branch 'dev'
+            }
+            steps {
+                sh '''
+                    sudo yum localinstall -y rpm/RPMS/noarch/springboot-camel-*.rpm
+                    sudo systemctl enable springboot-dev
+                    sudo systemctl restart springboot-dev
+                '''
+            }
+        }
 
         stage('Deploy QA') {
             when {
@@ -108,16 +113,9 @@ pipeline {
             }
             steps {
                 sh '''
-                    echo "Deploying QA on same EC2"
-
-                    pkill -f "spring.profiles.active=qa" || true
-
-                    cp target/*.jar ${BASE_DIR}/qa/${APP_NAME}
-
-                    nohup java -jar ${BASE_DIR}/qa/${APP_NAME} \
-                        --spring.profiles.active=qa \
-                        --server.port=8082 \
-                        > ${BASE_DIR}/logs/qa.log 2>&1 &
+                    sudo yum localinstall -y rpm/RPMS/noarch/springboot-camel-*.rpm
+                    sudo systemctl enable springboot-qa
+                    sudo systemctl restart springboot-qa
                 '''
             }
         }
