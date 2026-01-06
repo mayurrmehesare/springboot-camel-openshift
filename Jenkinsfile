@@ -66,7 +66,7 @@ pipeline {
         stage('Package') {
             when {
                 anyOf {
-                    branch 'develop'
+                    branch 'dev'
                     branch 'qa'
                 }
             }
@@ -77,22 +77,37 @@ pipeline {
             }
         }
 
-        stage('Deploy DEV') {
+        stage('Build RPM') {
             when {
-                branch 'develop'
+                anyOf {
+                    branch 'dev'
+                    branch 'qa'
+                }
             }
             steps {
                 sh '''
-                    echo "Deploying DEV on same EC2"
+                    mkdir -p rpm/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
 
-                    pkill -f "spring.profiles.active=dev" || true
+                    cp target/*.jar rpm/SOURCES/app.jar
+                    cp deploy/systemd/*.service rpm/SOURCES/
+                    cp deploy/rpm/springboot-camel.spec rpm/SPECS/
 
-                    cp target/*.jar ${BASE_DIR}/dev/${APP_NAME}
+                    rpmbuild \
+                      --define "_topdir $(pwd)/rpm" \
+                      -bb rpm/SPECS/springboot-camel.spec
+                '''
+            }
+        }
 
-                    nohup java -jar ${BASE_DIR}/dev/${APP_NAME} \
-                        --spring.profiles.active=dev \
-                        --server.port=8081 \
-                        > ${BASE_DIR}/logs/dev.log 2>&1 &
+        stage('Deploy DEV') {
+            when {
+                branch 'dev'
+            }
+            steps {
+                sh '''
+                    sudo yum localinstall -y rpm/RPMS/noarch/springboot-camel-*.rpm
+                    sudo systemctl enable springboot-dev
+                    sudo systemctl restart springboot-dev
                 '''
             }
         }
@@ -103,16 +118,9 @@ pipeline {
             }
             steps {
                 sh '''
-                    echo "Deploying QA on same EC2"
-
-                    pkill -f "spring.profiles.active=qa" || true
-
-                    cp target/*.jar ${BASE_DIR}/qa/${APP_NAME}
-
-                    nohup java -jar ${BASE_DIR}/qa/${APP_NAME} \
-                        --spring.profiles.active=qa \
-                        --server.port=8082 \
-                        > ${BASE_DIR}/logs/qa.log 2>&1 &
+                    sudo yum localinstall -y rpm/RPMS/noarch/springboot-camel-*.rpm
+                    sudo systemctl enable springboot-qa
+                    sudo systemctl restart springboot-qa
                 '''
             }
         }

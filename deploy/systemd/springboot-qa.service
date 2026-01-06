@@ -1,0 +1,21 @@
+[Unit]
+Description=Spring Boot Camel QA
+After=network.target
+
+[Service]
+Type=simple
+User=ec2-user
+WorkingDirectory=/opt/springboot/qa
+
+ExecStart=/usr/bin/java -jar /opt/springboot/qa/app.jar \
+  --spring.profiles.active=qa \
+  --server.port=8082
+
+Restart=always
+RestartSec=5
+SuccessExitStatus=143
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
