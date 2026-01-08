@@ -93,8 +93,13 @@ pipeline {
                     cp deploy/systemd/*.service rpm/SOURCES/
                     cp deploy/rpm/springboot-camel.spec rpm/SPECS/
 
-                    rpmbuild \
+                  //  rpmbuild \
+                    //  --define "_topdir $(pwd)/rpm" \
+                      // -bb rpm/SPECS/springboot-camel.spec
+                      
+                      rpmbuild \
                       --define "_topdir $(pwd)/rpm" \
+                      --define "release ${BUILD_NUMBER}" \
                       -bb rpm/SPECS/springboot-camel.spec
                 '''
             }
