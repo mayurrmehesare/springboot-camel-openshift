@@ -1,6 +1,6 @@
 Name: springboot-camel
 Version: 1.0.0
-Release: 2%{?dist}
+Release: %{?release}%{?dist}
 Summary: Spring Boot Camel Application
 
 License: Proprietary
