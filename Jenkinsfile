@@ -89,7 +89,9 @@ pipeline {
                 sh '''
                     mkdir -p rpm/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
 
-                    cp target/*.jar rpm/SOURCES/app.jar
+                   // cp target/springboot-camel-*.jar rpm/SOURCES/app.jar
+                   JAR_FILE=$(ls target/*SNAPSHOT.jar | grep -v original)
+                    cp "$JAR_FILE" rpm/SOURCES/app.jar
                     cp deploy/systemd/*.service rpm/SOURCES/
                     cp deploy/rpm/springboot-camel.spec rpm/SPECS/
 
