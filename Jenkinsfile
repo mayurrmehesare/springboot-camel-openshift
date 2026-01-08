@@ -107,7 +107,8 @@ pipeline {
             }
             steps {
                 sh '''
-                    sudo yum localinstall -y rpm/RPMS/noarch/springboot-camel-*.rpm
+                    LATEST_RPM=$(ls -1 rpm/RPMS/noarch/springboot-camel-*.rpm | sort -V | tail -n 1)
+                    sudo yum localinstall -y "$LATEST_RPM"
                     sudo systemctl enable springboot-dev
                     sudo systemctl restart springboot-dev
                 '''
