@@ -102,18 +102,33 @@ pipeline {
         }
 
         stage('Deploy DEV') {
-            when {
-                branch 'dev'
-            }
-            steps {
-                sh '''
-                    LATEST_RPM=$(ls -1 rpm/RPMS/noarch/springboot-camel-*.rpm | sort -V | tail -n 1)
-                    sudo yum localinstall -y "$LATEST_RPM"
-                    sudo systemctl enable springboot-dev
-                    sudo systemctl restart springboot-dev
-                '''
-            }
-        }
+    when {
+        branch 'dev'
+    }
+    steps {
+        sh '''
+            set -e
+
+            DEV_HOST=172.31.11.76
+            DEV_USER=ec2-user
+
+            LATEST_RPM=$(ls -1 rpm/RPMS/noarch/springboot-camel-*.rpm | sort -V | tail -n 1)
+
+            echo "Copying RPM to DEV EC2..."
+            scp -o StrictHostKeyChecking=no "$LATEST_RPM" ${DEV_USER}@${DEV_HOST}:/tmp/
+
+            echo "Installing RPM on DEV EC2..."
+            ssh ${DEV_USER}@${DEV_HOST} "
+                sudo dnf remove -y springboot-camel || true
+                sudo dnf localinstall -y /tmp/$(basename $LATEST_RPM)
+                sudo systemctl daemon-reload
+                sudo systemctl enable springboot-dev
+                sudo systemctl restart springboot-dev
+            "
+        '''
+    }
+}
+
 
         stage('Deploy QA') {
             when {
