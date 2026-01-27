@@ -8,6 +8,6 @@ public class HelloController {
 
     @GetMapping("/")
     public String hello() {
-        return "Hello from Apache Camel running using RPM on 19th jan 2026 6.30 PM 🚀";
+        return "Hello from Apache Camel running using RPM on 27th jan 2026 🚀";
     }
 }
